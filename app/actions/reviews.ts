@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { getClientIpHash } from "@/utils/ip";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -20,6 +21,13 @@ export async function postReview(prevState: ActionState, formData: FormData): Pr
 
   if (!user) return { error: "You must be signed in to write a review." };
 
+  // Email-verification gate. Also enforced at the DB via RLS (see
+  // 0003_review_security.sql); this check gives a friendly message instead of a
+  // generic policy-violation error.
+  if (!user.email_confirmed_at) {
+    return { error: "Please verify your email address before writing a review. Check your inbox for the confirmation link." };
+  }
+
   const parsed = reviewSchema.safeParse({
     companyId: formData.get("companyId"),
     companySlug: formData.get("companySlug"),
@@ -32,16 +40,27 @@ export async function postReview(prevState: ActionState, formData: FormData): Pr
     return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> };
   }
 
+  const ipHash = await getClientIpHash();
+
   const { error } = await supabase.from("reviews").insert({
     company_id: parsed.data.companyId,
     user_id: user.id,
     rating: parsed.data.rating,
     title: parsed.data.title,
     body: parsed.data.body,
+    ip_hash: ipHash,
   });
 
   if (error) {
-    if (error.code === "23505") return { error: "You have already reviewed this company." };
+    // 23505 = unique_violation. Two constraints can fire: one review per user
+    // per company, and one review per IP per company. Disambiguate on the
+    // constraint/index name so the user gets an accurate message.
+    if (error.code === "23505") {
+      if (error.message.includes("ip")) {
+        return { error: "A review for this company has already been submitted from your network." };
+      }
+      return { error: "You have already reviewed this company." };
+    }
     return { error: error.message };
   }
 
