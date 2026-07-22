@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { getClientIpHash } from "@/utils/ip";
+import { mapReviewInsertError } from "@/utils/reviewErrors";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -52,16 +53,7 @@ export async function postReview(prevState: ActionState, formData: FormData): Pr
   });
 
   if (error) {
-    // 23505 = unique_violation. Two constraints can fire: one review per user
-    // per company, and one review per IP per company. Disambiguate on the
-    // constraint/index name so the user gets an accurate message.
-    if (error.code === "23505") {
-      if (error.message.includes("ip")) {
-        return { error: "A review for this company has already been submitted from your network." };
-      }
-      return { error: "You have already reviewed this company." };
-    }
-    return { error: error.message };
+    return { error: mapReviewInsertError(error) ?? error.message };
   }
 
   revalidatePath(`/companies/${parsed.data.companySlug}`);

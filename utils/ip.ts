@@ -1,5 +1,4 @@
 import { createHmac } from "crypto";
-import { headers } from "next/headers";
 
 /**
  * Best-effort extraction of the client IP from proxy headers.
@@ -10,8 +9,11 @@ import { headers } from "next/headers";
  *
  * NOTE: these headers are attacker-controllable when the app is not behind a
  * trusted proxy that overwrites them. See DECISIONS.md for the threat model.
+ * `next/headers` is imported lazily so the pure hashIp() below can be unit-
+ * tested outside a request context.
  */
 export async function getClientIp(): Promise<string | null> {
+  const { headers } = await import("next/headers");
   const h = await headers();
 
   const forwarded = h.get("x-forwarded-for");
