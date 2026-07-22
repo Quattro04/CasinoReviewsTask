@@ -1,10 +1,14 @@
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/server";
 import StarRating from "./StarRating";
 import type { CompanyWithRating } from "@/types/database";
 
-function CompanyCardContent({ company }: { company: CompanyWithRating }) {
-  const rating = company.avg_rating ?? 0;
+/**
+ * Presentational company card. The caller is responsible for fetching the
+ * company together with its rating (e.g. from the companies_with_ratings view)
+ * so lists render in a single query instead of one query per card.
+ */
+export default function CompanyCard({ company }: { company: CompanyWithRating }) {
+  const rating = company.bayesian_rating ?? company.avg_rating ?? 0;
 
   return (
     <Link
@@ -18,10 +22,10 @@ function CompanyCardContent({ company }: { company: CompanyWithRating }) {
         <div className="min-w-0">
           <h3 className="font-semibold text-gray-900 truncate">{company.name}</h3>
           {company.domain && (
-            <p className="text-sm text-gray-400 truncate">{company.domain}</p>
+            <p className="text-sm text-gray-500 truncate">{company.domain}</p>
           )}
           {company.category && (
-            <span className="inline-block mt-1 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+            <span className="inline-block mt-1 text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
               {company.category}
             </span>
           )}
@@ -33,41 +37,14 @@ function CompanyCardContent({ company }: { company: CompanyWithRating }) {
           {rating > 0 ? rating.toFixed(1) : "No reviews"}
         </span>
         {company.review_count > 0 && (
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-gray-500">
             · {company.review_count} review{company.review_count !== 1 ? "s" : ""}
           </span>
         )}
       </div>
       {company.description && (
-        <p className="mt-2 text-sm text-gray-500 line-clamp-2">{company.description}</p>
+        <p className="mt-2 text-sm text-gray-600 line-clamp-2">{company.description}</p>
       )}
     </Link>
   );
-}
-
-type CompanyCardProps =
-  | { company: CompanyWithRating; companyId?: never }
-  | { companyId: string; company?: never };
-
-export default async function CompanyCard(props: CompanyCardProps) {
-  if (props.company) {
-    return <CompanyCardContent company={props.company} />;
-  }
-
-  const supabase = await createClient();
-  const { data: row } = await supabase
-    .from("companies")
-    .select("*, company_ratings (avg_rating, review_count)")
-    .eq("id", props.companyId)
-    .single();
-
-  if (!row) return null;
-
-  const company: CompanyWithRating = {
-    ...row,
-    avg_rating: row.company_ratings?.[0]?.avg_rating ?? null,
-    review_count: row.company_ratings?.[0]?.review_count ?? 0,
-  };
-
-  return <CompanyCardContent company={company} />;
 }

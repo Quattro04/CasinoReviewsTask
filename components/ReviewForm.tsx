@@ -93,7 +93,7 @@ export default function ReviewForm({ companyId, companySlug }: Props) {
       <button
         type="submit"
         disabled={isPending || rating === 0}
-        className="w-full py-2 px-4 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-2 px-4 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isPending ? "Submitting…" : "Submit review"}
       </button>

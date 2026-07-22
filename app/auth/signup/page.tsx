@@ -12,6 +12,22 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-gray-900 mb-8 text-center">Create an account</h1>
         <div className="bg-white rounded-xl border border-gray-100 p-6">
+          {state?.success ? (
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-2xl" aria-hidden="true">
+                ✉️
+              </div>
+              <h2 className="font-semibold text-gray-900">Check your inbox</h2>
+              <p className="text-sm text-gray-600">
+                We&apos;ve sent you a confirmation link. Verify your email to finish
+                creating your account — you&apos;ll need a verified email before you
+                can write a review.
+              </p>
+              <Link href="/auth/login" className="inline-block text-sm text-green-700 hover:underline font-medium">
+                Back to sign in
+              </Link>
+            </div>
+          ) : (
           <form action={formAction} className="space-y-4">
             {state?.error && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{state.error}</p>
@@ -73,18 +89,19 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-2.5 px-4 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 px-4 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isPending ? "Creating account…" : "Create account"}
             </button>
 
             <p className="text-center text-sm text-gray-500">
               Already have an account?{" "}
-              <Link href="/auth/login" className="text-green-600 hover:underline font-medium">
+              <Link href="/auth/login" className="text-green-700 hover:underline font-medium">
                 Sign in
               </Link>
             </p>
           </form>
+          )}
         </div>
       </div>
     </div>

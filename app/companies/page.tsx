@@ -1,41 +1,51 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import CompanyCard from "@/components/CompanyCard";
 import type { CompanyWithRating } from "@/types/database";
+import { absoluteUrl } from "@/utils/seo";
 
 type Props = { searchParams: Promise<{ q?: string }> };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { q } = await searchParams;
+  if (q) {
+    // Search-result pages are canonicalised to the clean listing and kept out of
+    // the index to avoid thin/duplicate near-infinite query URLs.
+    return {
+      title: `Search results for "${q}"`,
+      robots: { index: false, follow: true },
+      alternates: { canonical: absoluteUrl("/companies") },
+    };
+  }
+  return {
+    title: "All companies",
+    description: "Browse and search companies reviewed on ReviewHub.",
+    alternates: { canonical: absoluteUrl("/companies") },
+  };
+}
+
+/** Escape LIKE/ILIKE wildcards so a user's `%` or `_` is matched literally. */
+function escapeLike(input: string) {
+  return input.replace(/[\\%_]/g, "\\$&");
+}
 
 export default async function CompaniesPage({ searchParams }: Props) {
   const { q } = await searchParams;
   const supabase = await createClient();
 
-  let idQuery = supabase.from("companies").select("id").order("name");
+  // Single query against the flat view, ordered by Bayesian rating.
+  let query = supabase.from("companies_with_ratings").select("*");
 
   if (q) {
-    idQuery = idQuery.ilike("name", `%${q}%`);
+    query = query.ilike("name", `%${escapeLike(q)}%`);
   }
 
-  const { data: rows } = await idQuery.limit(50);
+  const { data } = await query
+    .order("bayesian_rating", { ascending: false, nullsFirst: false })
+    .limit(50);
 
-  const companiesWithRatings: CompanyWithRating[] = (
-    await Promise.all(
-      (rows ?? []).map(async ({ id }) => {
-        const { data: company } = await supabase
-          .from("companies")
-          .select("*, company_ratings (avg_rating, review_count)")
-          .eq("id", id)
-          .single();
-
-        if (!company) return null;
-
-        return {
-          ...company,
-          avg_rating: company.company_ratings?.[0]?.avg_rating ?? null,
-          review_count: company.company_ratings?.[0]?.review_count ?? 0,
-        };
-      })
-    )
-  ).filter((company): company is CompanyWithRating => company !== null);
+  const companiesWithRatings = (data ?? []) as CompanyWithRating[];
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
@@ -45,7 +55,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
         </h1>
         <Link
           href="/companies/new"
-          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-full hover:bg-green-700 text-center"
+          className="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-full hover:bg-green-800 text-center"
         >
           + Add company
         </Link>
@@ -63,7 +73,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
           />
           <button
             type="submit"
-            className="px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-full hover:bg-green-700"
+            className="px-5 py-2 text-sm font-medium text-white bg-green-700 rounded-full hover:bg-green-800"
           >
             Search
           </button>
@@ -79,11 +89,11 @@ export default async function CompaniesPage({ searchParams }: Props) {
       </form>
 
       {companiesWithRatings.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-gray-500">
           {q ? (
             <>
               <p>No companies found for &quot;{q}&quot;.</p>
-              <Link href="/companies/new" className="mt-2 inline-block text-green-600 hover:underline text-sm">
+              <Link href="/companies/new" className="mt-2 inline-block text-green-700 hover:underline text-sm">
                 Add it →
               </Link>
             </>
@@ -92,11 +102,15 @@ export default async function CompaniesPage({ searchParams }: Props) {
           )}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {companiesWithRatings.map((company) => (
-            <CompanyCard key={company.id} company={company} />
-          ))}
-        </div>
+        <>
+          {/* Keeps heading order sequential (h1 → h2 → the h3 in each card). */}
+          <h2 className="sr-only">Companies</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {companiesWithRatings.map((company) => (
+              <CompanyCard key={company.id} company={company} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

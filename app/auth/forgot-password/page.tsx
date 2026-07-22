@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 href="/auth/login"
-                className="block text-sm text-green-600 hover:underline"
+                className="block text-sm text-green-700 hover:underline"
               >
                 Back to sign in
               </Link>
@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full py-2.5 px-4 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-2.5 px-4 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isPending ? "Sending…" : "Send reset link"}
               </button>
@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
                 Remembered it?{" "}
                 <Link
                   href="/auth/login"
-                  className="text-green-600 hover:underline font-medium"
+                  className="text-green-700 hover:underline font-medium"
                 >
                   Sign in
                 </Link>

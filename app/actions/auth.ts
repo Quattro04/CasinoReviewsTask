@@ -17,7 +17,10 @@ const signInSchema = z.object({
 
 type ActionState = { error?: string; fieldErrors?: Record<string, string[]> } | undefined;
 
-export async function signUp(prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function signUp(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState & { success?: boolean }> {
   const parsed = signUpSchema.safeParse({
     displayName: formData.get("displayName"),
     email: formData.get("email"),
@@ -29,13 +32,19 @@ export async function signUp(prevState: ActionState, formData: FormData): Promis
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: { data: { display_name: parsed.data.displayName } },
   });
 
   if (error) return { error: error.message };
+
+  // With email confirmations enabled, signUp returns no session — the user must
+  // verify before they are signed in (and before they can post a review). Show
+  // a "check your inbox" notice rather than pretending they're logged in.
+  if (!data.session) return { success: true };
+
   redirect("/");
 }
 
