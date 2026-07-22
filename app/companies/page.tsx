@@ -5,37 +5,27 @@ import type { CompanyWithRating } from "@/types/database";
 
 type Props = { searchParams: Promise<{ q?: string }> };
 
+/** Escape LIKE/ILIKE wildcards so a user's `%` or `_` is matched literally. */
+function escapeLike(input: string) {
+  return input.replace(/[\\%_]/g, "\\$&");
+}
+
 export default async function CompaniesPage({ searchParams }: Props) {
   const { q } = await searchParams;
   const supabase = await createClient();
 
-  let idQuery = supabase.from("companies").select("id").order("name");
+  // Single query against the flat view, ordered by Bayesian rating.
+  let query = supabase.from("companies_with_ratings").select("*");
 
   if (q) {
-    idQuery = idQuery.ilike("name", `%${q}%`);
+    query = query.ilike("name", `%${escapeLike(q)}%`);
   }
 
-  const { data: rows } = await idQuery.limit(50);
+  const { data } = await query
+    .order("bayesian_rating", { ascending: false, nullsFirst: false })
+    .limit(50);
 
-  const companiesWithRatings: CompanyWithRating[] = (
-    await Promise.all(
-      (rows ?? []).map(async ({ id }) => {
-        const { data: company } = await supabase
-          .from("companies")
-          .select("*, company_ratings (avg_rating, review_count)")
-          .eq("id", id)
-          .single();
-
-        if (!company) return null;
-
-        return {
-          ...company,
-          avg_rating: company.company_ratings?.[0]?.avg_rating ?? null,
-          review_count: company.company_ratings?.[0]?.review_count ?? 0,
-        };
-      })
-    )
-  ).filter((company): company is CompanyWithRating => company !== null);
+  const companiesWithRatings = (data ?? []) as CompanyWithRating[];
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">

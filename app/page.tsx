@@ -5,10 +5,11 @@ import CompanyCard from "@/components/CompanyCard";
 export default async function Home() {
   const supabase = await createClient();
 
-  const { data: rows } = await supabase
-    .from("companies")
-    .select("id")
-    .order("created_at", { ascending: false })
+  // Single query, ordered by Bayesian rating so "Top rated" is actually top-rated.
+  const { data: companies } = await supabase
+    .from("companies_with_ratings")
+    .select("*")
+    .order("bayesian_rating", { ascending: false, nullsFirst: false })
     .limit(6);
 
   return (
@@ -47,8 +48,8 @@ export default async function Home() {
             View all →
           </Link>
         </div>
-        {(rows ?? []).length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
+        {(companies ?? []).length === 0 ? (
+          <div className="text-center py-16 text-gray-500">
             <p>No companies yet.</p>
             <Link href="/companies/new" className="mt-2 inline-block text-green-600 hover:underline text-sm">
               Add the first one →
@@ -56,8 +57,8 @@ export default async function Home() {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {rows!.map((row) => (
-              <CompanyCard key={row.id} companyId={row.id} />
+            {companies!.map((company) => (
+              <CompanyCard key={company.id} company={company} />
             ))}
           </div>
         )}
