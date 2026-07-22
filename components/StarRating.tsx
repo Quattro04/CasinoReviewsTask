@@ -26,7 +26,11 @@ export default function StarRating({ rating, max = 5, size = "md" }: Props) {
   const sizeClass = sizes[size];
 
   const row = (colorClass: string) => (
-    <span className={`flex gap-0.5 ${colorClass}`}>
+    // w-max keeps the row at its natural width so the clipped overlay renders
+    // full-size stars and just gets cut off — without it, the overlay row is
+    // constrained to the clip container's width and its stars shrink out of
+    // alignment with the gray row beneath.
+    <span className={`flex gap-0.5 w-max shrink-0 ${colorClass}`}>
       {Array.from({ length: max }, (_, i) => (
         <StarIcon key={i} className={sizeClass} />
       ))}
@@ -34,10 +38,10 @@ export default function StarRating({ rating, max = 5, size = "md" }: Props) {
   );
 
   return (
-    <span role="img" aria-label={label} className="relative inline-flex">
+    <span role="img" aria-label={label} className="relative inline-flex w-max">
       {row("text-gray-200")}
       <span
-        className="absolute inset-0 overflow-hidden"
+        className="absolute inset-y-0 left-0 overflow-hidden"
         style={{ width: `${pct}%` }}
         aria-hidden="true"
       >
