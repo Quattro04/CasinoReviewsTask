@@ -41,7 +41,7 @@ export default async function Home() {
             />
             <button
               type="submit"
-              className="px-6 py-2.5 text-sm font-medium text-white bg-green-600 rounded-full hover:bg-green-700 transition-colors"
+              className="px-6 py-2.5 text-sm font-medium text-white bg-green-700 rounded-full hover:bg-green-800 transition-colors"
             >
               Search
             </button>
@@ -53,14 +53,14 @@ export default async function Home() {
       <section className="max-w-6xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Top rated companies</h2>
-          <Link href="/companies" className="text-sm text-green-600 hover:underline">
+          <Link href="/companies" className="text-sm text-green-700 hover:underline">
             View all →
           </Link>
         </div>
         {(companies ?? []).length === 0 ? (
           <div className="text-center py-16 text-gray-500">
             <p>No companies yet.</p>
-            <Link href="/companies/new" className="mt-2 inline-block text-green-600 hover:underline text-sm">
+            <Link href="/companies/new" className="mt-2 inline-block text-green-700 hover:underline text-sm">
               Add the first one →
             </Link>
           </div>

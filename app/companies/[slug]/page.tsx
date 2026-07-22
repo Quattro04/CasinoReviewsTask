@@ -124,7 +124,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                     href={`https://${typedCompany.domain}`}
                     target="_blank"
                     rel="noopener noreferrer nofollow"
-                    className="text-sm text-green-600 hover:underline"
+                    className="text-sm text-green-700 hover:underline"
                   >
                     {typedCompany.domain}
                   </a>
@@ -177,7 +177,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               <p className="text-sm text-gray-600 mb-3">Sign in to write a review</p>
               <Link
                 href={`/auth/login?next=/companies/${typedCompany.slug}`}
-                className="inline-block px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-full hover:bg-green-700"
+                className="inline-block px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-full hover:bg-green-800"
               >
                 Sign in
               </Link>
@@ -237,13 +237,13 @@ function ReviewPagination({
         const prev = pages[i - 1];
         return (
           <span key={p} className="flex items-center gap-1">
-            {prev && p - prev > 1 && <span className="px-1 text-gray-400">…</span>}
+            {prev && p - prev > 1 && <span className="px-1 text-gray-500">…</span>}
             <Link
               href={href(p)}
               aria-current={p === page ? "page" : undefined}
               className={
                 p === page
-                  ? "px-3 py-1.5 text-sm font-semibold text-white bg-green-600 rounded-lg"
+                  ? "px-3 py-1.5 text-sm font-semibold text-white bg-green-700 rounded-lg"
                   : "px-3 py-1.5 text-sm text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50"
               }
             >

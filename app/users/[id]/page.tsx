@@ -101,7 +101,7 @@ export default async function UserProfilePage({ params }: Props) {
                   {review.companies && (
                     <Link
                       href={`/companies/${review.companies.slug}`}
-                      className="font-medium text-gray-900 hover:text-green-600"
+                      className="font-medium text-gray-900 hover:text-green-700"
                     >
                       {review.companies.name}
                     </Link>
@@ -121,7 +121,7 @@ export default async function UserProfilePage({ params }: Props) {
               {review.companies && (
                 <Link
                   href={`/companies/${review.companies.slug}/reviews/${review.id}`}
-                  className="mt-2 block font-medium text-sm text-gray-800 hover:text-green-600"
+                  className="mt-2 block font-medium text-sm text-gray-800 hover:text-green-700"
                 >
                   {review.title}
                 </Link>

@@ -55,7 +55,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
         </h1>
         <Link
           href="/companies/new"
-          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-full hover:bg-green-700 text-center"
+          className="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-full hover:bg-green-800 text-center"
         >
           + Add company
         </Link>
@@ -73,7 +73,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
           />
           <button
             type="submit"
-            className="px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-full hover:bg-green-700"
+            className="px-5 py-2 text-sm font-medium text-white bg-green-700 rounded-full hover:bg-green-800"
           >
             Search
           </button>
@@ -89,11 +89,11 @@ export default async function CompaniesPage({ searchParams }: Props) {
       </form>
 
       {companiesWithRatings.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-gray-500">
           {q ? (
             <>
               <p>No companies found for &quot;{q}&quot;.</p>
-              <Link href="/companies/new" className="mt-2 inline-block text-green-600 hover:underline text-sm">
+              <Link href="/companies/new" className="mt-2 inline-block text-green-700 hover:underline text-sm">
                 Add it →
               </Link>
             </>
@@ -102,11 +102,15 @@ export default async function CompaniesPage({ searchParams }: Props) {
           )}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {companiesWithRatings.map((company) => (
-            <CompanyCard key={company.id} company={company} />
-          ))}
-        </div>
+        <>
+          {/* Keeps heading order sequential (h1 → h2 → the h3 in each card). */}
+          <h2 className="sr-only">Companies</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {companiesWithRatings.map((company) => (
+              <CompanyCard key={company.id} company={company} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

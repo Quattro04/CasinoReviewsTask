@@ -11,7 +11,7 @@ export default async function Navbar() {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold text-green-600 tracking-tight">
+        <Link href="/" className="text-xl font-bold text-green-700 tracking-tight">
           ReviewHub
         </Link>
         <nav className="flex items-center gap-1">
@@ -54,7 +54,7 @@ export default async function Navbar() {
               </Link>
               <Link
                 href="/auth/signup"
-                className="px-4 py-1.5 text-sm font-medium text-white bg-green-600 rounded-full hover:bg-green-700"
+                className="px-4 py-1.5 text-sm font-medium text-white bg-green-700 rounded-full hover:bg-green-800"
               >
                 Sign up free
               </Link>

@@ -195,15 +195,32 @@ hardening and confirmed the partial index exempts NULL (seed) rows.
   and `<time dateTime>` on dates.
 
 ### Lighthouse
-> _To be completed against the running app once Supabase credentials are in
-> `.env.local`. Method: `npm run build && npm start`, then Lighthouse (mobile)
-> on the home, companies list, and a company page. Targets: LCP < 2.5s, CLS
-> near 0, a11y ≥ 95. Findings and fixes will be recorded here._
 
-The LCP element on content pages is the hero/company H1 (text, no hero image),
-which should already be fast; the main pre-emptive wins were the N+1 removal
-(server response time) and font-swap (render-blocking). Remaining fixes will be
-driven by the actual report.
+Method: `npm run build && npm start` (production build for realistic metrics),
+then Lighthouse (default mobile throttling) on the home page, companies list,
+and a company page.
+
+**Final scores** (Performance / Accessibility / Best-Practices / SEO):
+
+| Page | Perf | A11y | BP | SEO | LCP | CLS |
+|---|---|---|---|---|---|---|
+| Home | 98–100 | 100 | 100 | 100 | ~2.4 s | 0 |
+| Companies list | 100 | 100 | 100 | 100 | 1.8 s | 0 |
+| Company | 98–100 | 100 | 100 | 100 | 1.7–2.4 s | 0 |
+
+LCP is comfortably under the 2.5 s target, CLS is 0, and TBT ~20 ms on every
+page. The LCP element is the page/company H1 (text, no hero image), so the wins
+came from the server-side N+1 removal and `display:swap`, not image work.
+
+**Accessibility issues found and fixed** (started at 95):
+- **Color contrast**: Tailwind v4's `green-600` (#00a63e) gives only 3.21:1 for
+  white-on-green buttons and green links on white (AA needs 4.5:1), and the
+  footer's `gray-400` was 2.6:1. Darkened the brand to `green-700` (buttons,
+  links; hover `green-800`) and body grays to `gray-500` site-wide → all pass.
+- **Heading order**: the companies list jumped `h1 → h3` (the card title) with no
+  `h2`. Added a screen-reader-only `h2` so the outline is sequential.
+
+After both fixes, accessibility is 100 on all three pages.
 
 ---
 

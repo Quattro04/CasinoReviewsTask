@@ -24,7 +24,7 @@ export default function ReviewCard({ review, companySlug }: Props) {
             <h3 className="mt-2">
               <Link
                 href={`/companies/${companySlug}/reviews/${review.id}`}
-                className="font-semibold text-gray-900 hover:text-green-600"
+                className="font-semibold text-gray-900 hover:text-green-700"
               >
                 {review.title}
               </Link>
@@ -43,7 +43,7 @@ export default function ReviewCard({ review, companySlug }: Props) {
           by{" "}
           <Link
             href={`/users/${review.user_id}`}
-            className="font-medium text-gray-600 hover:text-green-600"
+            className="font-medium text-gray-600 hover:text-green-700"
           >
             {review.profiles.display_name}
           </Link>

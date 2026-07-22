@@ -44,7 +44,7 @@ function LoginForm() {
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Password
           </label>
-          <Link href="/auth/forgot-password" className="text-xs text-green-600 hover:underline">
+          <Link href="/auth/forgot-password" className="text-xs text-green-700 hover:underline">
             Forgot password?
           </Link>
         </div>
@@ -64,14 +64,14 @@ function LoginForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full py-2.5 px-4 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-2.5 px-4 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isPending ? "Signing in…" : "Sign in"}
       </button>
 
       <p className="text-center text-sm text-gray-500">
         No account?{" "}
-        <Link href="/auth/signup" className="text-green-600 hover:underline font-medium">
+        <Link href="/auth/signup" className="text-green-700 hover:underline font-medium">
           Sign up free
         </Link>
       </p>

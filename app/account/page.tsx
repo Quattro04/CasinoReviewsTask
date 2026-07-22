@@ -37,9 +37,9 @@ export default async function AccountPage() {
       </h2>
 
       {(reviews ?? []).length === 0 ? (
-        <div className="text-center py-12 text-gray-400 text-sm">
+        <div className="text-center py-12 text-gray-500 text-sm">
           <p>You haven&apos;t written any reviews yet.</p>
-          <Link href="/companies" className="mt-2 inline-block text-green-600 hover:underline">
+          <Link href="/companies" className="mt-2 inline-block text-green-700 hover:underline">
             Find a company to review →
           </Link>
         </div>
@@ -51,7 +51,7 @@ export default async function AccountPage() {
                 <div>
                   <Link
                     href={`/companies/${review.companies?.slug}`}
-                    className="font-medium text-gray-900 hover:text-green-600"
+                    className="font-medium text-gray-900 hover:text-green-700"
                   >
                     {review.companies?.name}
                   </Link>
@@ -59,7 +59,7 @@ export default async function AccountPage() {
                     <StarRating rating={review.rating} size="sm" />
                   </div>
                 </div>
-                <time className="text-sm text-gray-400 shrink-0">
+                <time className="text-sm text-gray-500 shrink-0">
                   {new Date(review.created_at).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "short",

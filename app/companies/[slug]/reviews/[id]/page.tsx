@@ -91,10 +91,10 @@ export default async function ReviewPage({ params }: Props) {
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="text-sm text-gray-500 mb-6">
         <ol className="flex flex-wrap items-center gap-1">
-          <li><Link href="/companies" className="hover:text-green-600">Companies</Link></li>
+          <li><Link href="/companies" className="hover:text-green-700">Companies</Link></li>
           <li aria-hidden="true">/</li>
           <li>
-            <Link href={`/companies/${slug}`} className="hover:text-green-600">
+            <Link href={`/companies/${slug}`} className="hover:text-green-700">
               {review.companies?.name}
             </Link>
           </li>
@@ -118,11 +118,11 @@ export default async function ReviewPage({ params }: Props) {
 
         <footer className="mt-6 pt-4 border-t border-gray-100 text-sm text-gray-600">
           Reviewed by{" "}
-          <Link href={`/users/${review.user_id}`} className="font-medium text-gray-800 hover:text-green-600">
+          <Link href={`/users/${review.user_id}`} className="font-medium text-gray-800 hover:text-green-700">
             {author}
           </Link>{" "}
           ·{" "}
-          <Link href={`/companies/${slug}`} className="text-green-600 hover:underline">
+          <Link href={`/companies/${slug}`} className="text-green-700 hover:underline">
             {review.companies?.name}
           </Link>
         </footer>
