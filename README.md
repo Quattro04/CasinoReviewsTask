@@ -7,6 +7,12 @@ and leave your own. Built on Next.js 16 · React 19 · TypeScript · Tailwind CS
 See [DECISIONS.md](./DECISIONS.md) for the rationale behind the changes,
 trade-offs, the security threat model, and how AI tooling was used and verified.
 
+---
+
+App is also live at Vercel: https://casino-reviews-task.vercel.app/
+
+---
+
 ## Getting started
 
 ### 1. Environment
