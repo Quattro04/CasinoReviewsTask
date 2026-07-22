@@ -47,8 +47,10 @@ Open http://localhost:3000.
 npm test
 ```
 
-Unit tests run out of the box. The duplicate-review integration test runs only
-when `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set.
+Vitest auto-loads `.env.local`, so unit tests run out of the box and the
+duplicate-review integration test runs automatically when
+`NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are present there
+(otherwise it's skipped). No need to export env vars by hand.
 
 ## Project layout
 

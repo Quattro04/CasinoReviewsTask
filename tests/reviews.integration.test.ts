@@ -41,8 +41,15 @@ describe.skipIf(!canRun)("review guards (integration)", () => {
       password: "password123",
       email_confirm: true,
     });
-    userAId.id = a.data.user!.id;
-    userBId.id = b.data.user!.id;
+    // Surface the real auth error (usually a bad/insufficient service-role key)
+    // instead of a cryptic "cannot read properties of null" further down.
+    if (a.error || !a.data.user || b.error || !b.data.user) {
+      throw new Error(
+        `Failed to create test users — check SUPABASE_SERVICE_ROLE_KEY. ${a.error?.message ?? b.error?.message ?? "no user returned"}`,
+      );
+    }
+    userAId.id = a.data.user.id;
+    userBId.id = b.data.user.id;
 
     const c = await admin
       .from("companies")
