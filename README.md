@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ReviewHub
 
-## Getting Started
+A simplified Trustpilot-style review platform: discover companies, read reviews,
+and leave your own. Built on Next.js 16 · React 19 · TypeScript · Tailwind CSS 4
+· Supabase (`@supabase/ssr`).
 
-First, run the development server:
+See [DECISIONS.md](./DECISIONS.md) for the rationale behind the changes,
+trade-offs, the security threat model, and how AI tooling was used and verified.
+
+## Getting started
+
+### 1. Environment
+
+Copy the example and fill in your Supabase project values:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | yes | Project URL. |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | Publishable (anon) key; safe in the browser, RLS enforces access. |
+| `NEXT_PUBLIC_SITE_URL` | prod | Canonical origin for canonicals/sitemap/OG. Defaults to `http://localhost:3000`. |
+| `IP_HASH_SECRET` | prod | Server pepper for hashing reviewer IPs. `openssl rand -hex 32`. |
+| `SUPABASE_SERVICE_ROLE_KEY` | tests only | Enables the integration test; **never** ship to the client. |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Apply the migrations in `supabase/migrations/` to your project (via the Supabase
+SQL editor, or `supabase db push` if using the CLI), then optionally load
+`supabase/seed.sql` for sample companies. Enable **email confirmations** in
+Supabase Auth so the verification gate is exercised.
 
-## Learn More
+### 3. Run
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open http://localhost:3000.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. Test
 
-## Deploy on Vercel
+```bash
+npm test
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Unit tests run out of the box. The duplicate-review integration test runs only
+when `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project layout
+
+- `app/` — routes (App Router). Server actions in `app/actions/`.
+- `components/` — presentational + form components.
+- `utils/` — Supabase clients, rating math, IP hashing, SEO/schema helpers.
+- `supabase/migrations/` — schema, RLS, Bayesian view, security constraints.
+- `tests/` — Vitest suite.
