@@ -124,13 +124,13 @@ Bugs found by manually going through the site after it was done.
 Three guarantees, all enforced at the **database** level so they hold even if the
 application layer is bypassed:
 
-1. **One review per user per company** — `unique (company_id, user_id)` (present
-   in the starter; kept). The app maps the `23505` to a friendly message.
-2. **One review per IP per company** — new `unique (company_id, ip_hash)` partial
+1. **One review per user per company** — `unique (company_id, user_id)`. The app
+   maps the `23505` (db "unique_violation" code) to a friendly message.
+3. **One review per IP per company** — new `unique (company_id, ip_hash)` partial
    index. The app reads `x-forwarded-for`/`x-real-ip` and stores an **HMAC-SHA256
-   hash** of the IP with a server-side pepper (`IP_HASH_SECRET`) — never the raw
-   IP.
-3. **Email-verification gate** — a `SECURITY DEFINER` function
+   hash** of the IP with a server-side pepper (`IP_HASH_SECRET`) in a `hash_ip`
+   column in the `reviews` table — never the raw IP.
+5. **Email-verification gate** — a `SECURITY DEFINER` function in supabase
    `is_email_verified()` checks `auth.users.email_confirmed_at`, enforced in the
    reviews `INSERT` RLS policy, and also checked in the action for a good error.
 
@@ -153,16 +153,18 @@ lookup.
   still post multiple reviews. Per-IP uniqueness raises cost, not a wall.
 - **Shared-network false positives**: a hard `unique(company_id, ip_hash)` blocks
   legitimate distinct users behind one NAT/office/CGNAT from each reviewing the
-  same company. This is the literal reading of the requirement; I chose it for
+  same company (e.g. an office/school: hundreds of employees behind one gateway
+  share a handful of IPs. This is the literal reading of the requirement; I chose it for
   provable enforcement and documented the cost. A production system would more
   likely use a **time-windowed** limit (e.g. 1/IP/company/24h) plus signals.
 - **Header spoofing**: `x-forwarded-for` is client-controllable unless a trusted
   proxy overwrites it. Behind Vercel/a real LB the left-most hop is trustworthy;
   standalone it is not. The app must be deployed behind such a proxy for the IP
   limit to mean anything.
-- **Email verification ≠ human**: disposable-but-verifiable inboxes exist.
+- **Email verification ≠ human**: disposable-but-verifiable inboxes exist, sites
+  like temp-mail, mailinator, 10minutemail, etc. They hand you a throwaway inbox instantly.
 - Content quality / fake-but-unique reviews, and review-bombing coordinated
-  across many real accounts, are out of scope.
+  across many real accounts can still happen but are out of scope here.
 
 **What I'd add at production scale**
 - A proper rate limiter (Redis/Upstash sliding window) on IP *and* account, with
