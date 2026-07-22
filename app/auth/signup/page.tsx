@@ -12,6 +12,22 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-gray-900 mb-8 text-center">Create an account</h1>
         <div className="bg-white rounded-xl border border-gray-100 p-6">
+          {state?.success ? (
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-2xl" aria-hidden="true">
+                ✉️
+              </div>
+              <h2 className="font-semibold text-gray-900">Check your inbox</h2>
+              <p className="text-sm text-gray-600">
+                We&apos;ve sent you a confirmation link. Verify your email to finish
+                creating your account — you&apos;ll need a verified email before you
+                can write a review.
+              </p>
+              <Link href="/auth/login" className="inline-block text-sm text-green-600 hover:underline font-medium">
+                Back to sign in
+              </Link>
+            </div>
+          ) : (
           <form action={formAction} className="space-y-4">
             {state?.error && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{state.error}</p>
@@ -85,6 +101,7 @@ export default function SignupPage() {
               </Link>
             </p>
           </form>
+          )}
         </div>
       </div>
     </div>
