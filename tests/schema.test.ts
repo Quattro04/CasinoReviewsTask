@@ -16,7 +16,7 @@ const company = {
 
 describe("organizationSchema", () => {
   it("emits an Organization with an AggregateRating when reviews exist", () => {
-    const s = organizationSchema(company) as Record<string, any>;
+    const s = organizationSchema(company);
     expect(s["@type"]).toBe("Organization");
     expect(s.url).toBe("https://example.com/companies/acme");
     expect(s.sameAs).toEqual(["https://acme.com"]);
@@ -29,7 +29,7 @@ describe("organizationSchema", () => {
   });
 
   it("omits AggregateRating when there are no reviews", () => {
-    const s = organizationSchema({ ...company, avg_rating: null, review_count: 0 }) as Record<string, any>;
+    const s = organizationSchema({ ...company, avg_rating: null, review_count: 0 });
     expect(s.aggregateRating).toBeUndefined();
   });
 });
@@ -39,7 +39,7 @@ describe("reviewSchema", () => {
     const s = reviewSchema(
       { id: "r1", rating: 5, title: "Great", body: "Loved it", created_at: "2024-01-01", author: "Jane" },
       company,
-    ) as Record<string, any>;
+    );
     expect(s["@type"]).toBe("Review");
     expect(s.reviewRating).toMatchObject({ ratingValue: 5, bestRating: 5 });
     expect(s.author).toMatchObject({ "@type": "Person", name: "Jane" });
@@ -53,7 +53,7 @@ describe("breadcrumbSchema", () => {
     const s = breadcrumbSchema([
       { name: "Companies", path: "/companies" },
       { name: "Acme", path: "/companies/acme" },
-    ]) as Record<string, any>;
+    ]);
     expect(s["@type"]).toBe("BreadcrumbList");
     expect(s.itemListElement).toHaveLength(2);
     expect(s.itemListElement[0]).toMatchObject({ position: 1, item: "https://example.com/companies" });
