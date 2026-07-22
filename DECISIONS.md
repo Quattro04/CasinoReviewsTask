@@ -21,6 +21,53 @@ covered with a test or hand-verified.
 
 ---
 
+## Discovered bugs
+
+Bugs found in the AI-generated starter (and one regression I introduced and then
+caught). Each is fixed in the commit noted; the per-area sections have the full
+rationale.
+
+**In the starter:**
+
+1. **N+1 query explosion** — the home page and companies list fetched a list of
+   IDs and then issued one query *per company* (and `CompanyCard` queried the DB
+   itself). Replaced with a single `companies_with_ratings` view read. *(perf)*
+2. **"Top rated" wasn't** — the home "Top rated companies" section sorted by
+   `created_at`, not by any rating. Now ordered by Bayesian rating. *(seo/perf)*
+3. **Naive average rating** — a single 5★ review outranked an established company;
+   replaced with a Bayesian estimate. *(seo)*
+4. **`hasReviewed` false negative at scale** — the company page decided whether to
+   show the review form by scanning only the latest 50 loaded reviews, so a user
+   whose review fell outside that window saw the form again (the DB constraint
+   still blocked the insert, but the UX was wrong). Replaced with a targeted
+   lookup. *(security/correctness)*
+5. **`StarRating` duplicate SVG gradient id** — every partial star reused
+   `id="partial"` (invalid duplicate IDs, broken fractional fill) and the
+   `aria-label` exposed raw floats like "3.6666 out of 5". Rewritten with a
+   clip-based fill and a clean label. *(a11y)*
+6. **No email-verification enforcement** — `postReview` only checked that a user
+   existed, never that their email was confirmed, and signup redirected home as
+   if logged in. Added a DB-level gate + "check your inbox" UX. *(security)*
+7. **Missing SEO layer** — no per-page metadata, canonicals, JSON-LD, sitemap, or
+   robots. Built out. *(seo)*
+8. **Low-contrast text / brand color** — Tailwind v4's `green-600` and `gray-400`
+   fail WCAG AA on white; surfaced by Lighthouse and fixed site-wide. *(a11y)*
+
+**Regression I introduced, then caught:**
+
+9. **`StarRating` filled-overlay shrinking** — my a11y rewrite (#5) put the green
+   filled-star row *inside* the width-clipped overlay container. As a flex row,
+   its star SVGs shrank to the clipped width (e.g. 76% for a 3.8 score) instead
+   of rendering full-size and being cropped, so the green stars came out narrower
+   than the gray stars beneath and visibly drifted out of alignment. Caught by
+   visual review, not by `tsc`/lint/tests — a reminder that pixel layout needs an
+   actual look. Fixed by pinning both rows to natural width (`w-max shrink-0`) so
+   the overlay renders full stars and the container merely clips them; verified in
+   the browser that all stars render at 20px and every filled star is
+   pixel-aligned with its gray counterpart. *(fix commit `fix(StarRating): …`)*
+
+---
+
 ## 1. Site Architecture
 
 ### What I added
