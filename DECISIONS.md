@@ -243,7 +243,7 @@ and a DB integration test).
   `SUPABASE_SERVICE_ROLE_KEY` are set, so `npm test` is green out of the box.
 - Plus unit coverage for IP hashing and the JSON-LD builders.
 
-`npm test` → 23 passing, 2 skipped (integration).
+`npm test` → 25 passing.
 
 I also installed a vscode extension for vitest and tested everything that way.
 
