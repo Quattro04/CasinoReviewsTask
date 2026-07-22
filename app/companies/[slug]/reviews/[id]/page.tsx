@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import StarRating from "@/components/StarRating";
+import JsonLd from "@/components/JsonLd";
+import { reviewSchema, breadcrumbSchema } from "@/utils/schema";
 import { absoluteUrl } from "@/utils/seo";
 
 type Props = { params: Promise<{ slug: string; id: string }> };
@@ -18,7 +21,11 @@ type ReviewDetail = {
   companies: { name: string; slug: string } | null;
 };
 
-async function getReview(id: string): Promise<ReviewDetail | null> {
+// Validate id is a UUID before hitting the DB (avoids a 500 on malformed ids).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const getReview = cache(async (id: string): Promise<ReviewDetail | null> => {
+  if (!UUID_RE.test(id)) return null;
   const supabase = await createClient();
   const { data } = await supabase
     .from("reviews")
@@ -26,7 +33,7 @@ async function getReview(id: string): Promise<ReviewDetail | null> {
     .eq("id", id)
     .single();
   return (data as ReviewDetail | null) ?? null;
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, id } = await params;
@@ -67,8 +74,20 @@ export default async function ReviewPage({ params }: Props) {
     day: "numeric",
   });
 
+  const company = { slug, name: review.companies?.name ?? "", domain: null, description: null };
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
+      <JsonLd
+        data={[
+          reviewSchema({ ...review, author }, company),
+          breadcrumbSchema([
+            { name: "Companies", path: "/companies" },
+            { name: review.companies?.name ?? "Company", path: `/companies/${slug}` },
+            { name: review.title, path: `/companies/${slug}/reviews/${id}` },
+          ]),
+        ]}
+      />
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="text-sm text-gray-500 mb-6">
         <ol className="flex flex-wrap items-center gap-1">

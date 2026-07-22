@@ -1,6 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import CompanyCard from "@/components/CompanyCard";
+import JsonLd from "@/components/JsonLd";
+import { websiteSchema } from "@/utils/schema";
+import { absoluteUrl } from "@/utils/seo";
+
+export const metadata: Metadata = {
+  alternates: { canonical: absoluteUrl("/") },
+};
 
 export default async function Home() {
   const supabase = await createClient();
@@ -14,6 +22,7 @@ export default async function Home() {
 
   return (
     <div>
+      <JsonLd data={websiteSchema()} />
       {/* Hero */}
       <section className="bg-white border-b border-gray-100 py-16 px-4">
         <div className="max-w-2xl mx-auto text-center">

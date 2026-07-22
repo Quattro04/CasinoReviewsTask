@@ -1,9 +1,29 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import CompanyCard from "@/components/CompanyCard";
 import type { CompanyWithRating } from "@/types/database";
+import { absoluteUrl } from "@/utils/seo";
 
 type Props = { searchParams: Promise<{ q?: string }> };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { q } = await searchParams;
+  if (q) {
+    // Search-result pages are canonicalised to the clean listing and kept out of
+    // the index to avoid thin/duplicate near-infinite query URLs.
+    return {
+      title: `Search results for "${q}"`,
+      robots: { index: false, follow: true },
+      alternates: { canonical: absoluteUrl("/companies") },
+    };
+  }
+  return {
+    title: "All companies",
+    description: "Browse and search companies reviewed on ReviewHub.",
+    alternates: { canonical: absoluteUrl("/companies") },
+  };
+}
 
 /** Escape LIKE/ILIKE wildcards so a user's `%` or `_` is matched literally. */
 function escapeLike(input: string) {

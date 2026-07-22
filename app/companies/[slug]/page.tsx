@@ -1,9 +1,14 @@
 import { notFound } from "next/navigation";
+import { cache } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import StarRating from "@/components/StarRating";
 import ReviewCard from "@/components/ReviewCard";
 import ReviewForm from "@/components/ReviewForm";
+import JsonLd from "@/components/JsonLd";
+import { organizationSchema, breadcrumbSchema } from "@/utils/schema";
+import { absoluteUrl } from "@/utils/seo";
 import type { CompanyWithRating, Review } from "@/types/database";
 
 type Props = {
@@ -13,18 +18,50 @@ type Props = {
 
 const PAGE_SIZE = 10;
 
+// Cached per request so generateMetadata and the page share one query.
+const getCompanyBySlug = cache(async (slug: string): Promise<CompanyWithRating | null> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("companies_with_ratings")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+  return (data as CompanyWithRating | null) ?? null;
+});
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const company = await getCompanyBySlug(slug);
+  if (!company) return { title: "Company not found", robots: { index: false, follow: false } };
+
+  const count = company.review_count ?? 0;
+  const score = company.bayesian_rating ?? company.avg_rating;
+  const scoreText = score != null && count > 0 ? `Rated ${Number(score).toFixed(1)}/5 from ${count} review${count !== 1 ? "s" : ""}. ` : "";
+
+  return {
+    title: `${company.name} reviews`,
+    description: `${scoreText}${company.description ?? `Read reviews of ${company.name} on ReviewHub.`}`.slice(0, 160),
+    alternates: { canonical: absoluteUrl(`/companies/${slug}`) },
+    openGraph: {
+      type: "website",
+      title: `${company.name} reviews`,
+      url: absoluteUrl(`/companies/${slug}`),
+    },
+  };
+}
+
 export default async function CompanyPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { page: pageParam } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: company }, { data: { user } }] = await Promise.all([
-    supabase.from("companies_with_ratings").select("*").eq("slug", slug).single(),
+  const [company, { data: { user } }] = await Promise.all([
+    getCompanyBySlug(slug),
     supabase.auth.getUser(),
   ]);
 
   if (!company) notFound();
-  const typedCompany = company as CompanyWithRating;
+  const typedCompany = company;
 
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
@@ -63,6 +100,15 @@ export default async function CompanyPage({ params, searchParams }: Props) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
+      <JsonLd
+        data={[
+          organizationSchema(typedCompany),
+          breadcrumbSchema([
+            { name: "Companies", path: "/companies" },
+            { name: typedCompany.name, path: `/companies/${typedCompany.slug}` },
+          ]),
+        ]}
+      />
       {/* Company header */}
       <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
         <div className="flex items-start gap-4">
