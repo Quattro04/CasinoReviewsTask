@@ -11,51 +11,23 @@ The whole task was done with **Claude Code (an agentic AI coder)** driving the
 edits, with me directing the plan, making the judgment calls, and verifying
 every output. My verification loop for each change was: read the generated diff,
 run `npx tsc --noEmit` and `npx eslint .`, run the unit tests, and reason about
-edge cases myself before committing. Representative prompts I gave are quoted in
-each section. Where AI produced something wrong or naive, I caught it in review —
-those cases are called out (e.g. the `"use server"` export constraint, the
-skipped-`describe` collection issue, PostgREST embed typing).
+edge cases, plus test it by hand in the app myself before committing.
 
 Nothing was committed that I hadn't type-checked, linted, and — for logic —
 covered with a test or hand-verified.
+
+For prompts, i let it read the instructions straight from Task.pdf and let him
+explain to me everything and structure a plan before commiting to any code changes.
+I made sure to understand the changes he will do, and then, as mentioned above,
+review them accordingly.
 
 ---
 
 ## Discovered bugs
 
-Bugs found in the AI-generated starter (and one regression I introduced and then
-caught). Each is fixed in the commit noted; the per-area sections have the full
-rationale.
+Bugs found by manually going through the site after it was done.
 
-**In the starter:**
-
-1. **N+1 query explosion** — the home page and companies list fetched a list of
-   IDs and then issued one query *per company* (and `CompanyCard` queried the DB
-   itself). Replaced with a single `companies_with_ratings` view read. *(perf)*
-2. **"Top rated" wasn't** — the home "Top rated companies" section sorted by
-   `created_at`, not by any rating. Now ordered by Bayesian rating. *(seo/perf)*
-3. **Naive average rating** — a single 5★ review outranked an established company;
-   replaced with a Bayesian estimate. *(seo)*
-4. **`hasReviewed` false negative at scale** — the company page decided whether to
-   show the review form by scanning only the latest 50 loaded reviews, so a user
-   whose review fell outside that window saw the form again (the DB constraint
-   still blocked the insert, but the UX was wrong). Replaced with a targeted
-   lookup. *(security/correctness)*
-5. **`StarRating` duplicate SVG gradient id** — every partial star reused
-   `id="partial"` (invalid duplicate IDs, broken fractional fill) and the
-   `aria-label` exposed raw floats like "3.6666 out of 5". Rewritten with a
-   clip-based fill and a clean label. *(a11y)*
-6. **No email-verification enforcement** — `postReview` only checked that a user
-   existed, never that their email was confirmed, and signup redirected home as
-   if logged in. Added a DB-level gate + "check your inbox" UX. *(security)*
-7. **Missing SEO layer** — no per-page metadata, canonicals, JSON-LD, sitemap, or
-   robots. Built out. *(seo)*
-8. **Low-contrast text / brand color** — Tailwind v4's `green-600` and `gray-400`
-   fail WCAG AA on white; surfaced by Lighthouse and fixed site-wide. *(a11y)*
-
-**Regression I introduced, then caught:**
-
-9. **`StarRating` filled-overlay shrinking** — my a11y rewrite (#5) put the green
+- **`StarRating` filled-overlay shrinking** — my a11y rewrite (#5) put the green
    filled-star row *inside* the width-clipped overlay container. As a flex row,
    its star SVGs shrank to the clipped width (e.g. 76% for a 3.8 score) instead
    of rendering full-size and being cropped, so the green stars came out narrower
@@ -97,20 +69,13 @@ rationale.
 | `/companies?q=...` | **noindex**, canonical → `/companies` | Avoids near-infinite thin query-string URLs in the index. |
 | `/account`, `/auth/*`, `/companies/new` | No | Private/utility; disallowed in `robots.ts` and behind auth. |
 
-### AI usage
-Prompt shape: *"Add a public user profile route at /users/[id] that lists the
-user's reviews from Supabase, with generateMetadata that noindexes profiles
-with zero reviews, and a review permalink at /companies/[slug]/reviews/[id] that
-404s if the review id doesn't belong to that company slug."* I added the UUID
-format guard and the company-slug ownership check after reviewing.
-
 ---
 
 ## 2. SEO
 
 ### Metadata
 - `metadataBase`, a title template (`%s | ReviewHub`), and default OpenGraph in
-  the root layout.
+  the root layout for the preview card in number of apps.
 - Per-page `generateMetadata` with canonical URLs for home, companies list,
   company, review, and user pages. Company/review descriptions are derived from
   real content (rating summary, review body excerpt).
@@ -145,20 +110,12 @@ format guard and the company-slug ownership check after reviewing.
 - Trade-off: **offset pagination** is simple and fine at this scale but degrades
   on deep pages and can skip/duplicate rows under concurrent inserts. At
   hundreds-of-thousands of reviews I'd switch to **keyset (created_at, id)**
-  pagination. Documented rather than prematurely built.
+  pagination ("seek" pagination: instead of "skip N").
 
 ### Other SEO basics
 - Dynamic `sitemap.ts` (home, listing, companies, reviews, and profiles of users
   who have ≥1 review — matching the noindex rule) and `robots.ts` disallowing
   private routes and pointing at the sitemap.
-
-### AI usage
-Prompts included: *"Write pure schema.org JSON-LD builder functions for
-Organization+AggregateRating, Review, and BreadcrumbList, taking plain data,
-returning objects, no React"* and *"Convert the company_ratings view to a
-Bayesian average I can ORDER BY, keeping a TS implementation identical for
-tests."* I verified the SQL formula against the TS unit tests and hand-checked
-exact values (e.g. two 5★ with mean 3 → 40/12 = 3.33).
 
 ---
 
@@ -214,13 +171,6 @@ lookup.
   detection.
 - Trusted-proxy IP extraction config; consider `/64` grouping for IPv6.
 - Moderation queue, reviewer-verified-purchase signals, and abuse reporting.
-
-### AI usage
-Prompts: *"Add a Postgres SECURITY DEFINER function that returns whether the
-current auth.uid()'s email is confirmed, and use it in the reviews insert RLS
-policy"* and *"Hash the client IP with HMAC-SHA256 and a server pepper before
-storing; read it from x-forwarded-for."* I reviewed the RLS `search_path = ''`
-hardening and confirmed the partial index exempts NULL (seed) rows.
 
 ---
 
@@ -293,24 +243,13 @@ and a DB integration test).
 
 `npm test` → 23 passing, 2 skipped (integration).
 
-### AI usage
-Prompt: *"Write Vitest unit tests for bayesianRating covering the prior,
-shrinkage, convergence, C=0, and validation; and a gated integration test that
-verifies both unique constraints against a real Supabase using a service-role
-client, skipping when env vars are absent."* AI's first integration draft
-constructed the client at `describe` top-level, which threw during collection
-even when skipped — I moved it into `beforeAll`.
+I also installed a vscode extension for vitest and tested everything that way.
 
 ---
 
-## Verifying AI output — general notes
+## Reason for this edit:
 
-- **Framework drift**: this is Next.js 16 (`proxy.ts` instead of `middleware.ts`,
-  `await params`/`searchParams`, `AGENTS.md` warns training data is stale). I kept
-  to the repo's existing conventions and type-checked every change.
-- **`"use server"` constraint**: AI initially exported a *sync* helper from the
-  `reviews.ts` server-action file; that's illegal (only async exports allowed).
-  Moved it to `utils/reviewErrors.ts`.
-- **PostgREST typing**: the untyped client infers to-one embeds as arrays; I
-  handled both shapes in the sitemap rather than trusting the generated type.
-- Every commit is scoped and passes `tsc`, `eslint`, and the test suite.
+After the app was done, i went through this file which was generated by AI and corrected what
+he had hallucinated and more importantly, to understand again everything he has
+done and if i missed something. Now this file reflectes my decisions and understanding
+of everything in this app (with the help of AI of course).
