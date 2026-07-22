@@ -25,6 +25,7 @@ export type Review = {
   title: string;
   body: string;
   created_at: string;
+  ip_hash: string | null;
   profiles?: Pick<Profile, "display_name">;
 };
 
@@ -32,9 +33,11 @@ export type CompanyRating = {
   company_id: string;
   avg_rating: number;
   review_count: number;
+  bayesian_rating: number;
 };
 
 export type CompanyWithRating = Company & {
   avg_rating: number | null;
   review_count: number;
+  bayesian_rating: number | null;
 };
